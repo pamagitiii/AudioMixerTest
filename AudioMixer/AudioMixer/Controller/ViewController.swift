@@ -10,8 +10,8 @@ import AVFoundation
 
 class ViewController: UIViewController {
     
+    // MARK: - Properties
     private let songs = ["Baker Street", "Feel", "Si", "Beast"]
-    
     private var isPlaying = false {
         didSet {
             if isPlaying == true {
@@ -31,10 +31,15 @@ class ViewController: UIViewController {
         }
     }
     
+    //URLы выбранных пользователем песен
     private var firstSongURL: URL?
     private var secondSongURL: URL?
     
+    //эту песню  будем ставить первой
     private var finalSongURL: URL?
+    
+    //эту песню будем ставить на репит
+    private var loopingSongURL: URL?
     
     private var crossfadeValue: Float = 5
     private let step: Float = 1
@@ -42,6 +47,7 @@ class ViewController: UIViewController {
     private var audioPlayer = AVAudioPlayer()
     private let filemgr = FileManager.default
     
+    // MARK: - UI Properties
     private let playButton: UIButton = {
         let button = UIButton()
         button.setBackgroundImage(UIImage(systemName: "play.circle")?.withTintColor(.systemGreen, renderingMode: .alwaysOriginal), for: .normal)
@@ -90,13 +96,14 @@ class ViewController: UIViewController {
         return button
     }()
     
-    
+    // MARK: - Life cycle
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
         setupUI()
     }
     
+    // MARK: - Methods
     private func setupUI() {
         view.addSubviews([crossfadeSlider, crossfadeValueLabel, firstSongButton, secondSongButton, playButton])
         
@@ -130,15 +137,17 @@ class ViewController: UIViewController {
         switch isPlaying {
         case true:
             audioPlayer.stop()
-            if firstSongURL != nil {
-                if filemgr.fileExists(atPath: finalSongURL!.path) {
+            if finalSongURL != nil && loopingSongURL != nil {
+                if filemgr.fileExists(atPath: finalSongURL!.path) && filemgr.fileExists(atPath: loopingSongURL!.path) {
                     do {
                         try filemgr.removeItem(at: finalSongURL!) //мы проверили что файл существует и удаляем его
+                        try filemgr.removeItem(at: loopingSongURL!) //мы проверили что файл существует и удаляем его
                     } catch let error {
                         presentAlert(withTitle: "Can't delete audio", message: error.localizedDescription)
                     }
                 }
             }
+            
             isPlaying = false
             
         case false:
@@ -152,16 +161,15 @@ class ViewController: UIViewController {
         }
     }
     
-    
     @objc private func sliderValueDidChange(_ sender: UISlider) {
         let roundedStepValue = round(sender.value / step) * step
         sender.value = roundedStepValue
         crossfadeValue = Float(roundedStepValue)
         crossfadeValueLabel.text = "Crossfade timing is \(Int(roundedStepValue)) sec."
     }
-    
 }
 
+// MARK: - Alerts for songs selecting
 private extension ViewController {
     @objc private func presentFirstSongAlert() {
         let alertController = UIAlertController(title: "Choose first song", message: nil, preferredStyle: .actionSheet)
@@ -196,6 +204,7 @@ private extension ViewController {
     }
 }
 
+// MARK: - Merging and saving audios
 private extension ViewController {
     func mergeAudioFiles(firstSongURL: URL, secondSongURL: URL, crossfadeValue: Float) {
         
@@ -263,7 +272,7 @@ private extension ViewController {
         
         //добавляем параметры микса
         audioMix.inputParameters = audioMixParam
-        print(audioMix.inputParameters)
+        //print(audioMix.inputParameters)
         
         //путь для сохранения конечного трека
         let finalUrl = URL(string: "\(getDocumentsDirectory())\(UUID().uuidString)_audio.m4a")
@@ -280,7 +289,6 @@ private extension ViewController {
         assetExport?.outputURL = finalUrl
         
         finalSongURL = finalUrl
-        
         
         assetExport?.exportAsynchronously(completionHandler: {
             print(finalUrl.path)
@@ -301,12 +309,89 @@ private extension ViewController {
             }
         })
         
-        //начинаем делать второй трек
+        // MARK: - Здесь "сводим" второй трек, который будем ставить на репит
+        //тайминги как и в первой композиции
         
+        //создаём вторую композицию
+        let loopComposition = AVMutableComposition()
         
+        //добавляем два трека на композицию
+        let loopCompositionFirstAudio: AVMutableCompositionTrack = loopComposition.addMutableTrack(withMediaType: AVMediaType.audio, preferredTrackID: CMPersistentTrackID())!
+        let loopCompositionSecondAudio: AVMutableCompositionTrack = loopComposition.addMutableTrack(withMediaType: AVMediaType.audio, preferredTrackID: CMPersistentTrackID())!
+        
+        //создаём аудиомикс
+        let loopAudioMix = AVMutableAudioMix()
+        var loopAudioMixParam: [AVMutableAudioMixInputParameters] = []
+        
+        //ассеты для каждого трека
+        let loopFirstTrack = assertFirstAudio.tracks(withMediaType: AVMediaType.audio).first!
+        let loopSecondTrack = assertSecondAudio.tracks(withMediaType: AVMediaType.audio).first!
+        
+        //параметры для первого
+        let loopFirstTrackParam = AVMutableAudioMixInputParameters(track: loopFirstTrack)
+        loopFirstTrackParam.trackID = loopCompositionFirstAudio.trackID
+        
+        //параметры для второго
+        let loopSecondTrackParam = AVMutableAudioMixInputParameters(track: loopSecondTrack)
+        loopSecondTrackParam.trackID = loopCompositionSecondAudio.trackID
+        
+        loopFirstTrackParam.setVolumeRamp(fromStartVolume: 0,
+                                          toEndVolume: 1,
+                                          timeRange: CMTimeRange(start: CMTime.zero,
+                                                                 end: CMTime(seconds: Double(crossfadeTiming), preferredTimescale: CMTimeScale(NSEC_PER_SEC))))
+        
+        loopFirstTrackParam.setVolumeRamp(fromStartVolume: 1,
+                                      toEndVolume: 0,
+                                      timeRange: CMTimeRange(start: assertFirstAudio.duration - CMTime(seconds: Double(crossfadeTiming), preferredTimescale: CMTimeScale(NSEC_PER_SEC)),
+                                                             end: firstTrack.timeRange.end))
+        
+        loopFirstTrackParam.setVolumeRamp(fromStartVolume: 0,
+                                      toEndVolume: 1,
+                                      timeRange: CMTimeRange(start: firstTrack.timeRange.end,
+                                                             end: firstTrack.timeRange.duration + CMTime(seconds: Double(crossfadeTiming), preferredTimescale: CMTimeScale(NSEC_PER_SEC))))
+        
+        loopFirstTrackParam.setVolumeRamp(fromStartVolume: 1,
+                                      toEndVolume: 0,
+                                      timeRange: CMTimeRange(start: assertFirstAudio.duration + assertSecondAudio.duration - CMTime(seconds: Double(crossfadeTiming), preferredTimescale: CMTimeScale(NSEC_PER_SEC)),
+                                                             end: assertFirstAudio.duration + assertSecondAudio.duration))
+        
+        loopAudioMixParam.append(loopFirstTrackParam)
+        loopAudioMixParam.append(loopSecondTrackParam)
+        
+        //добавляем первый трек
+        let loopFirstTrackTimeRange = CMTimeRange(start: CMTime.zero, duration: assertFirstAudio.duration)
+        try! loopCompositionFirstAudio.insertTimeRange(loopFirstTrackTimeRange, of: loopFirstTrack, at: CMTime.zero)
+        
+        //добавляем ввторой трек
+        let loopSecondTrackTimeRange = CMTimeRange(start: CMTime.zero, duration: assertSecondAudio.duration)
+        try! loopCompositionSecondAudio.insertTimeRange(loopSecondTrackTimeRange, of: loopSecondTrack, at: assertFirstAudio.duration)
+        
+        //добавляем параметры микса
+        loopAudioMix.inputParameters = loopAudioMixParam
+        print(loopAudioMix.inputParameters)
+        
+        //путь для сохранения второго трека
+        let loopFinalUrl = URL(string: "\(getDocumentsDirectory())\(UUID().uuidString)_loopAudio.m4a")
+        guard let loopFinalUrl = loopFinalUrl else {
+            presentAlert(withTitle: "Can't save audio", message: "")
+            return
+        }
+        
+        //сохраняем
+        let secondAssetExport = AVAssetExportSession(asset: loopComposition, presetName: AVAssetExportPresetAppleM4A)
+        secondAssetExport?.outputFileType = AVFileType.m4a
+        secondAssetExport?.audioMix = loopAudioMix
+        secondAssetExport?.outputURL = loopFinalUrl
+        
+        loopingSongURL = loopFinalUrl
+        
+        secondAssetExport?.exportAsynchronously(completionHandler: {
+            self.loopingSongURL = loopFinalUrl
+        })
         
     }
     
+    // MARK: - Helper function
     func getDocumentsDirectory() -> URL {
         let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
         let documentsDirectory = paths[0]
@@ -314,18 +399,20 @@ private extension ViewController {
     }
     
 }
-
+// MARK: - Audio Player Delegate
 extension ViewController: AVAudioPlayerDelegate {
     func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
-        if finalSongURL != nil {
+        if loopingSongURL != nil {
             do {
-                audioPlayer = try AVAudioPlayer(contentsOf: finalSongURL!)
+                print("looping song is playing!")
+                audioPlayer = try AVAudioPlayer(contentsOf: loopingSongURL!)
                 audioPlayer.delegate = self
                 audioPlayer.volume = 1
                 audioPlayer.prepareToPlay()
                 audioPlayer.play()
             } catch let error {
                 self.presentAlert(withTitle: "Error with playing audio", message: error.localizedDescription)
+                playTapped()
             }
         }
     }

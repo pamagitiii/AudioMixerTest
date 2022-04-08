@@ -15,7 +15,6 @@
 		CEA17C2727FD831C003375C6 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEA17C2627FD831C003375C6 /* ViewController.swift */; };
 		CEA17C2C27FD831F003375C6 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CEA17C2B27FD831F003375C6 /* Assets.xcassets */; };
 		CEA17C2F27FD831F003375C6 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = CEA17C2D27FD831F003375C6 /* LaunchScreen.storyboard */; };
-		CEA17C3D27FD8B3D003375C6 /* AudioEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEA17C3C27FD8B3D003375C6 /* AudioEditor.swift */; };
 		CEA17C4327FD9440003375C6 /* Baker Street.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = CEA17C3F27FD9440003375C6 /* Baker Street.mp3 */; };
 		CEA17C4827FD9CDD003375C6 /* UIView+.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEA17C4727FD9CDD003375C6 /* UIView+.swift */; };
 		CEA17C4A27FE17C1003375C6 /* UIViewController+.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEA17C4927FE17C1003375C6 /* UIViewController+.swift */; };
@@ -32,7 +31,6 @@
 		CEA17C2B27FD831F003375C6 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		CEA17C2E27FD831F003375C6 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		CEA17C3027FD831F003375C6 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		CEA17C3C27FD8B3D003375C6 /* AudioEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioEditor.swift; sourceTree = "<group>"; };
 		CEA17C3F27FD9440003375C6 /* Baker Street.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; name = "Baker Street.mp3"; path = "/Users/Anatoliy/Desktop/mixer/AudioMixerTest/AudioMixer/AudioMixer/Songs/Baker Street.mp3"; sourceTree = "<absolute>"; };
 		CEA17C4727FD9CDD003375C6 /* UIView+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIView+.swift"; sourceTree = "<group>"; };
 		CEA17C4927FE17C1003375C6 /* UIViewController+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIViewController+.swift"; sourceTree = "<group>"; };
@@ -71,7 +69,6 @@
 				CEA17C3E27FD941F003375C6 /* Songs */,
 				CEA17C3627FD8ACD003375C6 /* Application */,
 				CEA17C3727FD8ADC003375C6 /* Controller */,
-				CEA17C3827FD8AE6003375C6 /* AudioEditor */,
 				CEA17C3927FD8AF5003375C6 /* Extensions */,
 				CEA17C2B27FD831F003375C6 /* Assets.xcassets */,
 				CEA17C2D27FD831F003375C6 /* LaunchScreen.storyboard */,
@@ -95,14 +92,6 @@
 				CEA17C2627FD831C003375C6 /* ViewController.swift */,
 			);
 			path = Controller;
-			sourceTree = "<group>";
-		};
-		CEA17C3827FD8AE6003375C6 /* AudioEditor */ = {
-			isa = PBXGroup;
-			children = (
-				CEA17C3C27FD8B3D003375C6 /* AudioEditor.swift */,
-			);
-			path = AudioEditor;
 			sourceTree = "<group>";
 		};
 		CEA17C3927FD8AF5003375C6 /* Extensions */ = {
@@ -203,7 +192,6 @@
 				CEA17C2727FD831C003375C6 /* ViewController.swift in Sources */,
 				CEA17C4A27FE17C1003375C6 /* UIViewController+.swift in Sources */,
 				CEA17C2327FD831C003375C6 /* AppDelegate.swift in Sources */,
-				CEA17C3D27FD8B3D003375C6 /* AudioEditor.swift in Sources */,
 				CEA17C2527FD831C003375C6 /* SceneDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
